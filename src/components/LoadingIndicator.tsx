@@ -13,6 +13,7 @@ export function LoadingIndicator({
   completedMessage,
   isLoading = true,
 }: LoadingIndicatorProps) {
+  const nodeRef = React.useRef(null); // For react-transition-group
   // Adding the `.completed-message` class will delay the fade-out for 1s to
   // allow the user to see the updated message before it disappears.
   const showCompletedMessage = completedMessage ? "completed-message " : "";
@@ -20,6 +21,7 @@ export function LoadingIndicator({
 
   return (
     <CSSTransition
+      nodeRef={nodeRef}
       in={isLoading}
       timeout={timeout}
       classNames="LoadingContainer"

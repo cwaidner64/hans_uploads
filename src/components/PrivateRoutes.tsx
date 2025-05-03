@@ -12,8 +12,10 @@ import { MainNav } from "./MainNav";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 function wrapPrivateRouteWithSlide(render) {
+  const nodeRef = React.useRef(null); // For react-transition-group
   return ({ match }) => (
     <CSSTransition
+      nodeRef={nodeRef}
       in={match != null}
       timeout={250}
       classNames="page-slide"

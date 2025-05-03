@@ -13,6 +13,7 @@ import { SignIn } from "./views/SignIn";
 import { SignUp } from "./components/SignUp";
 
 function AnimatedRoutes() {
+  const nodeRef = React.useRef(null); // For react-transition-group
   const location = useLocation();
   const { user, setUser, isAuthenticated, isAuthReady, logOut } = useAuth();
 
@@ -27,7 +28,7 @@ function AnimatedRoutes() {
 
   return (
     <TransitionGroup>
-      <CSSTransition key={location.key} classNames="page-fade" timeout={300}>
+      <CSSTransition nodeRef={nodeRef} key={location.key} classNames="page-fade" timeout={300}>
         <Routes location={location}>
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="/sign-in" element={<SignIn />} />

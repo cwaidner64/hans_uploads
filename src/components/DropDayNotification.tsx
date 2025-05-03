@@ -24,6 +24,7 @@ function setAlerted() {
  * rewards into tokens or merchandise, and direct them to the /rewards route.
  */
 export function DropDayNotification() {
+  const nodeRef = React.useRef(null); // For react-transition-group
   const [isVisible, setIsVisible] = useState(false);
 
   function closeAlert() {
@@ -53,6 +54,7 @@ export function DropDayNotification() {
 
   return (
     <CSSTransition
+      nodeRef={nodeRef}
       in={isVisible}
       timeout={750}
       classNames="dropday-alert"
