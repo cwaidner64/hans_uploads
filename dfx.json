@@ -13,8 +13,7 @@
       },
       "type": "assets",
       "source": [
-        "build",
-        "public"
+        "build"
       ]
     }
   },

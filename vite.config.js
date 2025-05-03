@@ -7,7 +7,7 @@ const isLocal = true; // You can make this dynamic if you want (e.g., based on N
 const networkName = isLocal ? 'local' : 'ic';
 
 export default defineConfig({
-  publicDir: 'public',
+  // publicDir: 'public',
   plugins: [react()],
   build: {
     outDir: 'build',
