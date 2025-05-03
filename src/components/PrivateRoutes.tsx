@@ -9,19 +9,21 @@ import { Profile } from "../views/Profile";
 import { DropDayNotification } from "./DropDayNotification";
 import { RewardShowerNotification } from "./RewardShowerNotification";
 import { MainNav } from "./MainNav";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 function wrapPrivateRouteWithSlide(render) {
   const nodeRef = React.useRef(null); // For react-transition-group
   return ({ match }) => (
     <CSSTransition
-      nodeRef={nodeRef}
       in={match != null}
       timeout={250}
       classNames="page-slide"
       unmountOnExit
+      nodeRef={nodeRef}  // For react-transition-group compatibility
     >
-      <div className="page-slide">{render({ match })}</div>
+      <div className="page-slide" ref={nodeRef}>
+        {render({ match })}
+      </div>
     </CSSTransition>
   );
 }
@@ -44,52 +46,46 @@ export function PrivateRoutes({
   const privateRoutes = [
     {
       path: "/feed",
-      render: () => (
-        <Feed profileInfo={user} onRefreshUser={refreshProfileInfo} />
-      ),
+      element: <Feed profileInfo={user} onRefreshUser={refreshProfileInfo} />,
     },
-    { path: "/discover", render: () => <Discover profileInfo={user} /> },
+    { path: "/discover", element: <Discover profileInfo={user} /> },
     {
       path: "/upload",
-      render: () => <Upload onUpload={refreshProfileInfo} user={user} />,
+      element: <Upload onUpload={refreshProfileInfo} user={user} />,
     },
-    { path: "/rewards", render: () => <Rewards /> },
+    { path: "/rewards", element: <Rewards /> },
     {
       path: "/profile",
-      render: () => <Profile currentUser={user} onLogOut={logOut} />,
+      element: <Profile currentUser={user} onLogOut={logOut} />,
     },
     {
       path: "/profiles/:userId",
-      render: ({ match }) => (
-        <Profile key={match?.params.userId} currentUser={user} />
-      ),
+      element: <Profile currentUser={user} />,
     },
   ];
-  const privatePaths = privateRoutes.map(({ path }) => path);
 
   return (
     <>
-      {privatePaths.map((path) => (
-        <Route key={path} path={path}>
-          {isAuthenticated && user ? (
-            <>
-              <DropDayNotification />
-              <RewardShowerNotification currentUser={user} />
-              <MainNav paths={privatePaths} />
+      {isAuthenticated && user ? (
+        <>
+          {/* These components are now outside <Routes> */}
+          <DropDayNotification />
+          <RewardShowerNotification currentUser={user} />
+          <MainNav paths={privateRoutes.map((route) => route.path)} />
 
-              <Routes location={location}>
-                {privateRoutes.map(({ path, render }) => (
-                  <Route key={path} path={path}>
-                    {wrapPrivateRouteWithSlide(render)({ match: null })}
-                  </Route>
-                ))}
-              </Routes>
-            </>
-          ) : (
-            <Navigate to="/" replace />
-          )}
-        </Route>
-      ))}
+          <Routes location={location}>
+            {privateRoutes.map(({ path, element }) => (
+              <Route
+                key={path}
+                path={path}
+                element={wrapPrivateRouteWithSlide(() => element)({ match: null })}
+              />
+            ))}
+          </Routes>
+        </>
+      ) : (
+        <Navigate to="/" replace />
+      )}
     </>
   );
 }
