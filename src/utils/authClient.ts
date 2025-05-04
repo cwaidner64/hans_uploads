@@ -7,10 +7,8 @@ const isLocalEnv = DFX_NETWORK === "local";
 const IDENTITY_URL =
   new URLSearchParams(document.location.search).get('internetIdentityUrl') ||
   process.env.REACT_APP_INTERNET_IDENTITY_URL ||
-  (isLocalEnv
-    ? 'http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943' // Local
-    : 'https://identity.ic0.app' // Mainnet
-  );
+  import.meta.env.VITE_INTERNET_IDENTITY_URL || 
+  'https://identity.ic0.app';
 
 console.log(`IDENTITY_URL`, IDENTITY_URL)
 
