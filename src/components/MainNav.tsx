@@ -22,11 +22,19 @@ export function MainNav({ paths }) {
     );
 
     function onClick() {
+      console.log("onClick executed for destination:", destination);
       const destinationIndex = index < 0 ? paths.length : index;
       const value = currentIndex > destinationIndex ? -100 : 100;
+      const slideDirectionElement = document.getElementById("slide-direction");
       document.getElementById(
         "slide-direction"
       )!.innerHTML = `.page-slide { --inDirection: ${value}%; }`;
+      if (slideDirectionElement) {
+        slideDirectionElement.innerHTML = `.page-slide { --inDirection: ${value}%; }`;
+        console.log("Slide direction set to:", value);
+      } else {
+        console.error("Element with id 'slide-direction' not found.");
+      }
     }
 
     return { to: destination, onClick };
