@@ -1,28 +1,33 @@
 {
     "compilerOptions": {
-        "strict": true,
-        "target": "ES2020",
-        "experimentalDecorators": true,
-        "strictPropertyInitialization": false,
-        "moduleResolution": "node",
-        "allowJs": true,
-        "outDir": "HACK_BECAUSE_OF_ALLOW_JS",
-        "noImplicitAny": false,
-        "checkJs": false,
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "jsx": "react-jsx",
-        "lib": [
-        "dom", "dom.iterable", "esnext"
-        ],
-        "module": "esnext",
-        "downlevelIteration": true,
-        "skipLibCheck": true,
-        "allowSyntheticDefaultImports": true,
-        "noFallthroughCasesInSwitch": true,
-        "resolveJsonModule": true,
-        "isolatedModules": true,
-        "noEmit": true,
-        "baseUrl": "."
-    }
-}
+      "strict": true,
+      "target": "ES2020",
+      "experimentalDecorators": true,
+      "strictPropertyInitialization": false,
+      "moduleResolution": "node",
+      "allowJs": true,
+      "outDir": "HACK_BECAUSE_OF_ALLOW_JS",
+      "noImplicitAny": false,
+      "checkJs": false,
+      "esModuleInterop": true,
+      "forceConsistentCasingInFileNames": true,
+      "jsx": "react-jsx",
+      "lib": ["dom", "dom.iterable", "esnext"],
+      "module": "esnext",
+      "downlevelIteration": true,
+      "skipLibCheck": true,
+      "allowSyntheticDefaultImports": true,
+      "noFallthroughCasesInSwitch": true,
+      "resolveJsonModule": true,
+      "isolatedModules": true,
+      "noEmit": true,
+      "baseUrl": ".",
+      "types": ["history"]
+    },
+    "include": [
+      "src/utils/canister/typings.d.ts",
+      "vite.config.ts",
+      "vite-env.d.ts"
+    ]
+  }
+  

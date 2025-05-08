@@ -1,10 +1,12 @@
+
 import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProfileInfoPlus } from "../utils/canister/typings";
 import { useUploadVideo } from "../utils";
+import { useUploadFile}  from "../utils";
 import { LoadingIndicator } from "./LoadingIndicator";
 import "./Upload.scss";
-
+// import {useUploadFile} from "../utils/useUploadFile";
 /*
  * Allows selection of a file followed by the option to add a caption before
  * uploading to the canister. Utility functions assist in the data translation.
@@ -17,6 +19,14 @@ export function Upload({
   onUpload: () => void;
 }) {
   const navigate = useNavigate();
+  const [file_upload, setFile] = useState<File>();
+  const fileUploadController = useUploadFile({userId: user?.userName || ""});
+
+
+
+
+
+
   const [videoFile, setVideoFile] = useState<File>();
   const [videoPreviewURL, setVideoPreviewURL] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -52,15 +62,28 @@ export function Upload({
 
   function onChange(evt: ChangeEvent<HTMLInputElement>) {
     const { files } = evt.target;
+
     if (files && files.length === 1 && files.item(0)) {
       const file = files[0];
-      setVideoFile(file);
+      const videoTypes = ["video/mp4"];
+      const catchAllTypes = ["application/pdf", "text/plain", "image/jpeg", "image/png"];
+
+      if (videoTypes.includes(file.type)) {
+        // Handle video files
+        setVideoFile(file);
+        setUploading(true);
+        setUploadingClean(true);
+      } else if (catchAllTypes.includes(file.type)) {
+        // Handle other files
+        setFile(file);
+        alert(`Selected file: ${file.name}`);
+      } else {
+        alert("Unsupported file type.");
+      }
     }
   }
 
-  // Wraps and triggers several functions in the videoUploadController to
-  // generate a videoId and begin uploading.
-  function upload() {
+  function uploadVideo() {
     const caption = textAreaRef.current?.value;
     if (!videoFile || !caption) {
       return;
@@ -71,7 +94,19 @@ export function Upload({
     setUploading(true);
   }
 
-  // On upload success, wait 2 seconds and then redirect to /feed
+  function uploadFile() {
+    const caption = textAreaRef.current?.value;
+    if (!file_upload) {
+      alert("No file selected.");
+      return;
+    }
+    // Implement logic to upload the file (e.g., using a file upload controller)
+    alert(`Uploading file: ${file_upload.name}`);
+    fileUploadController.setFile(file_upload);
+    fileUploadController.setCaption(""); // Assuming no caption for non-video files
+    fileUploadController.setReady(true);
+  }
+
   useEffect(() => {
     if (videoUploadController.completedVideo !== undefined) {
       setUploading(false);
@@ -84,7 +119,7 @@ export function Upload({
 
   return (
     <main
-      id="video-upload-container"
+      id="upload-container"
       style={{
         height: "100%",
         width: "100%",
@@ -97,10 +132,10 @@ export function Upload({
       />
       <input
         hidden
-        id="video-upload"
+        id="file-upload"
         type="file"
         ref={inputRef}
-        accept=".mp4"
+        accept=".mp4, .jpeg, .png, .pdf, .txt"
         onChange={onChange}
       />
       {videoFile && (
@@ -113,10 +148,18 @@ export function Upload({
               placeholder="Add caption"
               rows={6}
             />
-            <button className="medium primary" onClick={upload}>
-              Post
+            <button className="medium primary" onClick={uploadVideo}>
+              Post Video
             </button>
           </div>
+        </div>
+      )}
+      {file_upload && !videoFile && (
+        <div className="file-add-details">
+          <p>Selected file: {file_upload.name}</p>
+          <button className="medium primary" onClick={uploadFile}>
+            Upload File
+          </button>
         </div>
       )}
     </main>

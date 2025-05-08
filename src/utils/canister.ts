@@ -13,6 +13,11 @@ import {
   VideoInfo,
   VideoInit,
   VideoResults,
+
+  FileInit,
+  FileInfo,
+  FileResults,
+
 } from "./canister/typings";
 import { unwrap } from "./index";
 import { actorController } from "./canister/actor";
@@ -279,4 +284,91 @@ export async function putAbuseFlagVideo(
     target,
     shouldFlag
   );
+}
+
+
+
+// File stuff
+
+export async function getFileChunks(fileInfo: FileInfo): Promise<string> {
+  const { fileId, chunkCount } = fileInfo;
+  const chunkBuffers: Buffer[] = [];
+  const chunksAsPromises: Array<Promise<Optional<number[]>>> = [];
+  for (let i = 1; i <= Number(chunkCount.toString()); i++) {
+    chunksAsPromises.push((await Server.actor).getFileChunk(fileId, i));
+  }
+  const nestedBytes: number[][] = (await Promise.all(chunksAsPromises))
+    .map(unwrap)
+    .filter((v): v is number[] => v !== null);
+  nestedBytes.forEach((bytes) => {
+    const bytesAsBuffer = Buffer.from(new Uint8Array(bytes));
+    chunkBuffers.push(bytesAsBuffer);
+  });
+  const fileBlob = new Blob([Buffer.concat(chunkBuffers)], {
+    type: "file/mp4",
+  });
+  const vidURL = URL.createObjectURL(fileBlob);
+  return vidURL;
+}
+
+export async function putFileChunk(
+  fileId: string,
+  chunkNum: number,
+  chunkData: number[]
+) {
+  return (await Server.actor).putFileChunk(fileId, chunkNum, chunkData);
+}
+
+export async function getFileInfo(userId: string, fileId: string) {
+  const fileInfo = unwrap(
+    await (await Server.actor).getFileInfo([userId], fileId)
+  );
+  if (fileInfo !== null) {
+    return fileInfo;
+  } else {
+    throw Error("no file found with id: " + fileId);
+  }
+}
+
+export async function createFile(fileInit: FileInit): Promise<string> {
+  const fileId = unwrap<string>(
+    await (await Server.actor).createFile(fileInit)
+  );
+  if (fileId) {
+    return fileId;
+  } else {
+    throw Error("failed to create file");
+  }
+}
+
+export async function getSearchFiles(
+  userId: string,
+  terms: string[],
+  limit: [] | [number] = [3]
+): Promise<FileInfo[]> {
+  // @ts-ignore
+  const files = unwrap<FileResults>(
+    await (await Server.actor).getSearchFiles(userId, terms, limit)
+  );
+  if (files !== null) {
+    const unwrappedFiles = files.map((v) => v[0]);
+    return unwrappedFiles;
+  } else {
+    return Promise.resolve([]);
+  }
+}
+
+
+export async function putFilePic(fileId: string, file: number[]) {
+  return (await Server.actor).putFilePic(fileId, [file]);
+}
+
+export async function getFilePic(fileId: string): Promise<number[]> {
+  const icResponse = await (await Server.actor).getFilePic(fileId);
+  const pic = unwrap<number[]>(icResponse);
+  if (pic !== null) {
+    return pic;
+  } else {
+    throw Error("pic should not be empty");
+  }
 }

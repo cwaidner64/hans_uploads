@@ -11,6 +11,14 @@ public type ProfilePic = [Nat8]; // encoded as a PNG file
 public type VideoPic = [Nat8]; // encoded as a PNG file
 public type ChunkData = [Nat8]; // encoded as ???
 
+
+public type FileId = Text;
+public type FileChunkId = Text;
+public type FileChunk = [Nat8];
+public type FilePic = [Nat8]; // Optional: a generic preview/thumbnail
+public type MimeType = Text;
+
+
 /// Role for a caller into the service API.
 /// Common case is #user.
 public type Role = {
@@ -40,6 +48,8 @@ public type ActionTarget = {
   #user : UserId ;
   /// Exactly one video is the target of the action.
   #video : VideoId ;
+
+  #file : FileId ;
   /// Everything is a potential target of the action.
   #all;
   /// Everything public is a potential target (of viewing only)
@@ -76,6 +86,8 @@ public type ProfileInfoPlus = {
  followers: [ProfileInfo];
  uploadedVideos: [VideoInfo];
  likedVideos: [VideoInfo];
+ uploadedFiles: [FileInfo];
+likedFiles: [FileInfo];
  hasPic: Bool;
  rewards: Nat;
  abuseFlagCount: Nat; // abuseFlags counts other users' flags on this profile, for possible blurring.
@@ -106,6 +118,18 @@ public type VideoInit = {
  chunkCount: Nat;
 };
 
+
+public type FileInit = {
+  userId : UserId;
+  name : Text;
+  createdAt : Timestamp;
+  mimeType : MimeType;
+  description : Text;
+  chunkCount : Nat;
+  tags : [Text];
+};
+
+
 /// video information provided by service to front end views -- Pic is separate query
 public type VideoInfo = {
  videoId : VideoId;
@@ -129,8 +153,24 @@ public type VideoInfo = {
  viewerHasFlagged: ?Bool; // true if we (the User requesting this profile) has flagged this profile for abuse.
 };
 
+public type FileInfo = {
+  fileId : FileId;
+  userId : UserId;
+  createdAt : Timestamp;
+  uploadedAt : Timestamp;
+  name : Text;
+  mimeType : MimeType;
+  description : Text;
+  tags : [Text];
+  chunkCount : Nat;
+  viewerHasFlagged: ?Bool; // true if we (the User requesting this profile) has flagged this profile for abuse.
+};
+
 public type VideoResult = (VideoInfo, ?VideoPic);
 public type VideoResults = [VideoResult];
+
+public type FileResult = (FileInfo, ?FilePic);
+public type FileResults = [FileResult];
 
 /// Notification messages
 public type Message = {
@@ -173,6 +213,8 @@ public type Service = actor {
   getProfilePic : query (userId : UserId) -> async ?ProfilePic;
   putProfilePic : (userId : UserId, pic : ?ProfilePic) -> async ?();
 
+
+  // Video-related functions
   getFeedVideos : /*query*/ (userId : UserId, limit : ?Nat) -> async ?VideoResults;
   getProfileVideos : /*query*/ (userId : UserId, limit : ?Nat) -> async ?VideoResults;
   getSearchVideos : query (userId : UserId, terms : [Text], limit : ?Nat) -> async ?VideoResults;
@@ -181,7 +223,6 @@ public type Service = actor {
   putProfileFollow : (userId : UserId, toFollow : UserId, follow : Bool) -> async ?();
 
   createVideo : (videoInfo : VideoInfo) -> async ?VideoId;
-
   getVideoInfo : query (videoId : VideoId) -> async ?VideoInfo;
   getVideoPic  : query (videoId : VideoId) -> async ?VideoPic;
 
@@ -191,6 +232,28 @@ public type Service = actor {
   putVideoChunk : (videoId : VideoId, chunkNum : Nat, chunkData : ChunkData) -> async ?();
   getVideoChunk : query (videoId : VideoId, chunkNum : Nat) -> async ?ChunkData;
 
+    
+  // File-related functions
+  getProfileFiles: /*query*/ (userId : UserId, limit : ?Nat) -> async ?FileResults;
+  getFiles : /*query*/ (userId : UserId, terms:[Text] ,limit : ?Nat) -> async ?FileResults;
+  getProfileInfoFiles : /*query*/ (userId : UserId, limit : ?Nat) -> async ?FileResults;
+
+  createFile : (fileInfo : FileInfo) -> async ?FileId;
+
+  getFileInfo : query (fileId : FileId) -> async ?FileInfo;
+  getFilePic : query (fileId : FileId, chunkNum : Nat) -> async ?FileChunk;
+
+  putFileInfo : (fileId : FileId, fileInfo : FileInfo) -> async ?();
+  putFilePic : (fileId : FileId, pic : ?FilePic) -> async ?();
+
+  putFileChunk : (fileId : FileId, chunkNum : Nat, chunkData : FileChunk) -> async ?();
+  getFileChunk : query (fileId : FileId, chunkNum : Nat) -> async ?FileChunk;
+
 };
 
 }
+
+
+
+
+

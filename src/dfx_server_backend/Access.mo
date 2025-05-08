@@ -38,7 +38,8 @@ module {
   public class Access(
     init : {
     admin : Principal;
-    uploaded : RelObj.RelObj<Types.UserId, Types.VideoId>
+    uploaded : RelObj.RelObj<Types.UserId, Types.VideoId>;
+    files: RelObj.RelObj<Types.UserId, Types.FileId>;
   } )
   {
 
@@ -66,7 +67,6 @@ module {
     public var userPrincipal : RelObj.RelObj<Types.UserId, Principal> =
       RelObj.RelObj<Types.UserId, Principal>
     ((Text.hash, Principal.hash), (Text.equal, Principal.equal));
-
     /// Get the maximal role for a user.
     public func userMaxRole(user : Types.UserId) : Types.Role {
       let roles = userRole.get0(user);
@@ -168,6 +168,20 @@ module {
                                  case _ { assert false; null };
                                  }
                                };
+                          case (#file f) {
+                                 let users = init.files.get1(f);
+                                 switch (users.size()) {
+                                 case 1 { if (userPrincipal.isMember(users[0], caller_)) {
+                                            ?()
+                                          } else { null } };
+                                 // invariant: exactly only one file uploader per file.
+                                 case _ { assert false; null };
+                                 }
+                        };
+                          case (#Fi) {
+                                 // Handle the #Fi case appropriately
+                                 null
+                        };
                         }
                       };
                }

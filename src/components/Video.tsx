@@ -94,7 +94,7 @@ function VideoBase(props: VideoProps) {
       if (!bytes) {
         return;
       }
-      const picBlob = new Blob([Buffer.from(new Uint8Array(bytes))], {
+      const picBlob = new Blob([Buffer.from(new Uint8Array(bytes as ArrayLike<number>))], {
         type: "image/jpeg",
       });
       const pic = URL.createObjectURL(picBlob);

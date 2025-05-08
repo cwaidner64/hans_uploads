@@ -22,9 +22,10 @@ import State "./State";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
 import TrieMap "mo:base/TrieMap";
+import Float "mo:base/Float";
 import Types "./Types";
 
-shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
+shared ({caller = initPrincipal}) actor class Server () /* : Types.Service */ {
 
   public type ProfileInfo = Types.ProfileInfo;
   public type ProfileInfoPlus = Types.ProfileInfoPlus;
@@ -34,8 +35,17 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
   public type VideoId = Types.VideoId;
   public type ChunkId = Types.ChunkId;
   public type ChunkData = Types.ChunkData;
+
   public type VideoInfo = Types.VideoInfo;
   public type VideoInit = Types.VideoInit;
+
+  public type FilePic=Types.FilePic;
+  public type FileId= Types.FileId;
+  public type FileInfo = Types.FileInfo;
+  public type FileInit = Types.FileInit;
+  public type FileResults = Types.FileResults;
+  public type FileResult = Types.FileResult;
+
   public type VideoPic = Types.VideoPic;
   public type VideoResult = Types.VideoResult;
   public type VideoResults = Types.VideoResults;
@@ -174,8 +184,10 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
       let likes_ = state.likes.get0(target);
       let superLikes_ = state.superLikes.get0(target);
       let uploaded_ = state.uploaded.get0(target);
+      let uploadedFiles_ = state.uploadedFiles.get0(target);
       let rewards_ = state.rewards.get(target)!;
       let abuseFlagCount_ = state.abuseFlagVideos.get1Size(target);
+      let files_ = state.files.get(target);
       {
         userName = profile.userName ;
         followers = filterOutAbuseUsers(followers_)! ;
@@ -183,6 +195,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
         likedVideos = filterOutAbuseVideos(likes_)! ;
         superLikedVideos = filterOutAbuseVideos(superLikes_)! ;
         uploadedVideos = filterOutAbuseVideos(uploaded_)! ;
+        uploadedFiles=filterOutAbuseFiles(uploadedFiles_)! ;
         hasPic = false ;
         rewards = rewards_;
         abuseFlagCount = abuseFlagCount_ ;
@@ -361,6 +374,8 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
       let profile = state.profiles.get(userId)!;
       {
         userName = profile.userName;
+        uploadedFiles=getNonAbuseFiles(caller, state.uploaded.get0(userId))!;
+        likedFiles = getNonAbuseFiles(caller, state.uploadedFiles.get0(userId))!;
         following = getNonAbuseProfiles(state.follows.get0(userId))!;
         followers = getNonAbuseProfiles(state.follows.get1(userId))!;
         likedVideos = getNonAbuseVideos(caller, state.likes.get0(userId))!;
@@ -472,6 +487,17 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
       let buf = Buffer.Buffer<VideoResult>(0);
       for (vid in state.uploaded.get0(userId).vals()) {
         buf.add((getVideoResult vid)!)
+
+      };
+      buf.toArray()
+    }
+  };
+  func getFileUploaded(userId : UserId, limit : ?Nat) : ?FileResults {
+    do ? {
+      let buf = Buffer.Buffer<FileResult>(0);
+      for (vid in state.uploadedFiles.get0(userId).vals()) {
+        buf.add((getFileResult vid)!)
+
       };
       buf.toArray()
     }
@@ -507,12 +533,51 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
       buf.toArray()
     }
   };
+  
+  func getFeedFiles_(userId : UserId, limit : ?Nat) : ?FileResults {
+    do ? {
+      let fils = HashMap.HashMap<Text, ()>(0, Text.equal, Text.hash);
+      let _ = state.profiles.get(userId)!; // assert userId exists
+      let buf = Buffer.Buffer<FileResult>(0);
+      let followIds = state.follows.get0(userId);
+      label loopFollows
+      for (i in followIds.vals()) {
+        switch limit { case null { }; case (?l) { if (buf.size() == l) { break loopFollows } } };
+        let vs = getFileUploaded(i, limit)!;
+        for ((vi, vp) in vs.vals()) {
+          if (fils.get(vi.fileId) == null) {
+            fils.put(vi.fileId, ());
+            buf.add((vi, vp));
+          }
+        }
+      };
+      label loopAll
+      for ((vid, v) in state.files.entries()) {
+        switch limit { case null { }; case (?l) { if (buf.size() == l) { break loopAll } } };
+        if (fils.get(vid) == null) {
+            fils.put(vid, ());
+            let vPic = state.filePics.get(vid);
+            let vi = getFileInfo_(?userId, vid)!;
+            buf.add((vi, vPic));
+        }
+      };
+      buf.toArray()
+    }
+  };
 
   public query(msg) func getFeedVideos(userId : UserId, limit : ?Nat) : async ?VideoResults {
     do ? {
       // privacy check: because we personalize the feed (example is abuse flag information).
       accessCheck(msg.caller, #update, #user userId)!;
       getFeedVideos_(userId, limit)!
+    }
+  };
+
+  public query(msg) func getFeedFiles(userId : UserId, limit : ?Nat) : async ?FileResults {
+    do ? {
+      // privacy check: because we personalize the feed (example is abuse flag information).
+      accessCheck(msg.caller, #update, #user userId)!;
+      getFeedFiles_(userId, limit)!
     }
   };
 
@@ -1066,6 +1131,168 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
     switch r {
     case null { { status = #err ; trace = t } };
     case _ { { status = #ok ; trace = t } };
+    }
+  };
+
+
+   func getFileInfo_ (caller : ?UserId, fileId : FileId) : ?FileInfo {
+    do ? {
+      let v = state.files.get(fileId)!;
+      {
+        fileId = fileId;
+        userId = v.userId ;
+        createdAt = v.createdAt ;
+        uploadedAt = v.uploadedAt ;
+        name = v.name ;
+        mimeType = v.mimeType ;
+        description = v.description ;
+        tags = v.tags ;
+        chunkcount = v.chunkCount ;
+        // This implementation makes public all users who flagged every video,
+        // but if that information should be kept private, get video info
+        // could return just whether the calling user flagged it.
+        viewerHasFlagged = do ? {
+          state.abuseFlagFiles.isMember(caller!, fileId) ;
+        };
+        abuseFlagCount = state.abuseFlagFiles.get1Size(fileId);
+        chunkCount = v.chunkCount;
+      }
+    }
+  };
+
+  public query(msg) func getFileInfo (caller : ?UserId, target : FileId) : async ?FileInfo {
+    do ? {
+      accessCheck(msg.caller, #view, #file target)!;
+      switch caller {
+        case null { getFileInfo_(null, target)! };
+        case (?callerUserName) {
+               // has private access to our caller view?
+               accessCheck(msg.caller, #update, #user callerUserName)!;
+               getFileInfo_(?callerUserName, target)!
+             };
+      }
+    }
+  };
+  
+  func filterOutAbuseFiles(files: [FileId]) : ?[FileId] {
+    do ? {
+      let nonAbuse = Buffer.Buffer<FileId>(0);
+      for (v in files.vals()) {
+        let flags = state.abuseFlagFiles.get1Size(v);
+        if (flags < Param.contentModerationThreshold) {
+          nonAbuse.add(v)
+        }
+      };
+      nonAbuse.toArray()
+    }
+  };
+
+  func getNonAbuseFiles(caller: ?UserId, files: [FileId]) : ?[FileInfo] {
+    do ? {
+      let nonAbuse = Buffer.Buffer<FileInfo>(0);
+      for (v in files.vals()) {
+        let flags = state.abuseFlagFiles.get1Size(v);
+        if (flags < Param.contentModerationThreshold) {
+          nonAbuse.add(getFileInfo_(caller, v)!)
+        }
+      };
+      nonAbuse.toArray()
+    }
+  };
+
+   public query(msg) func getFiles() : async ?[FileInfo] {
+    do ? {
+      accessCheck(msg.caller, #admin, #all)!;
+      let b = Buffer.Buffer<FileInfo>(0);
+      for ((v, _) in state.files.entries()) {
+        b.add(getFileInfo_(null, v)!)
+      };
+      b.toArray()
+    }
+  };
+
+  func createFile_(i:FileInit) : ?FileId {
+    let now = timeNow_();
+    let fileId = i.userId # "-" # i.name # "-" # (Int.toText(now));
+    switch (state.files.get(fileId)) {
+    case (?_) { /* error -- ID already taken. */ null };
+    case null { /* ok, not taken yet. */
+           state.files.put(fileId,
+        {
+          fileId = fileId;
+          userId = i.userId ;
+          createdAt = now ;
+          uploadedAt = now ;
+          name = i.name ;
+          mimeType = i.mimeType ;
+          description = i.description ;
+          tags = i.tags ;
+          chunkCount = i.chunkCount ;
+          viewerHasFlagged = null;
+        });
+           state.uploadedFiles.put(i.userId, fileId);
+           logEvent(#createFile({info = i; fileId = fileId}));
+           ?fileId
+         };
+    }
+  };
+
+  public shared(msg) func createFile(i : FileInit) : async ?FileId {
+    do ? {
+      accessCheck(msg.caller, #update, #user(i.userId))!;
+      createFile_(i)!
+    }
+  };
+
+   public query(msg) func getFilePic(fileId : FileId) : async ?FilePic {
+    do ? {
+      accessCheck(msg.caller, #view, #file fileId)!;
+      state.filePics.get(fileId)!
+    }
+  };
+
+  public shared(msg) func putFileInfo(fileId : FileId, fileInit : FileInit) : async ?() {
+    do ? {
+      accessCheck(msg.caller, #update, #file fileId)!;
+      let i = fileInit ;
+      let v = state.files.get(fileId)!;
+      state.files.put(fileId,
+    {
+      // some fields are "immutable", regardless of caller data:
+      fileId = fileId ;
+      userId = v.userId ;
+      uploadedAt = v.uploadedAt ;
+      createdAt= v.createdAt ;
+      name= i.name ;
+      mimeType = i.mimeType ;
+      description = i.description ;
+      tags = i.tags ;
+      chunkCount = i.chunkCount ;
+      viewerHasFlagged=null;
+
+    })
+    }
+  };
+
+  public shared(msg) func putFileChunk
+    (fileId : FileId, chunkNum : Nat, chunkData : [Nat8]) : async ?()
+  {
+    do ? {
+      accessCheck(msg.caller, #update, #file fileId)!;
+      state.chunks.put(chunkId(fileId, chunkNum), chunkData);
+    }
+  };
+
+  public query(msg) func getFileChunk(fileId : FileId, chunkNum : Nat) : async ?[Nat8] {
+    do ? {
+      accessCheck(msg.caller, #view, #file fileId)!;
+      state.chunks.get(chunkId(fileId, chunkNum))!
+    }
+  };
+
+  func getFileResult(i : FileId) : ?FileResult {
+    do ? {
+      (getFileInfo_(null, i)!, state.filePics.get(i))
     }
   };
 

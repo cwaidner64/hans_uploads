@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import { HttpAgent, Actor } from "@dfinity/agent";
 import _SERVICE from "../src/utils/canister/typings";
+import mime from "mime-types";
 
 const dfxConfig = require("../dfx.json");
 
@@ -14,8 +15,8 @@ const outputRoot = path.join(
   ".dfx",
   DFX_NETWORK,
   "canisters",
-  "CanCan",
-  "CanCan.js"
+  "Server",
+  "Server.js"
 );
 
 const INDEX = parseInt(process.argv[2], 10) ?? 0;
@@ -32,6 +33,15 @@ interface Video {
   likes: string[];
 }
 
+interface File {
+  userId:string;
+  name: string;
+  createdAt: number;
+  mimeType: string;
+  description: string;
+  tags: string[];
+
+}
 const { idlFactory, canisterId } = require(outputRoot);
 
 // @ts-ignore
@@ -86,6 +96,19 @@ async function seedProfiles() {
   }
 }
 
+
+async function seedFiles() {
+  const { files } = generateSeedData();
+
+  try {
+    // upload default videos
+    files.forEach(uploadFile);
+  } catch (error) {
+    console.error("Failed to create test videos.", error);
+  }
+}
+
+
 async function seedVideos() {
   const { videos } = generateSeedData();
 
@@ -96,6 +119,7 @@ async function seedVideos() {
     console.error("Failed to create test videos.", error);
   }
 }
+
 
 async function uploadVideo(video) {
   const pathname = path.resolve(__dirname, assetPath, video.name, video.name);
@@ -128,6 +152,49 @@ async function uploadVideo(video) {
   await canister.putVideoPic(videoId, [picAsNat]);
   console.timeEnd(`Stored video thumbnail for ${video.name}`);
 }
+
+async function uploadFile(file) {
+ 
+  const mimeType = mime.lookup(file.name) || "application/octet-stream";
+  const extension = mime.extension(mimeType);
+  if (!extension) {
+    console.error(`Unsupported file type for ${file.name}`);
+  }
+  const pathname = path.resolve(__dirname, assetPath, file.name, `${file.name}.${extension}`);
+
+  const filePath = pathname;
+  const filePicPath = `${pathname}.jpg`;
+
+  console.time(`Created file ${file.name}`)
+  const fileChunks = chunkFile(filePath);
+  const fileIdResponse = await canister.createFile({
+    ...file,
+    chunkCount: fileChunks.length,
+  });
+  console.timeEnd(`Created file ${file.name}`)
+  const fileId = fileIdResponse[0] as string;
+  console.time(`Stored file ${file.name}`)
+  await Promise.all(
+    fileChunks.map((chunk, chunkIndex) =>
+      canister.putFileChunk(fileId, chunkIndex + 1, chunk)
+    )
+  );
+  console.timeEnd(`Stored file ${file.name}`)
+  // upload png
+  console.time(`Stored file thumbnail for ${file.name}`);
+  const filePicFile = fs.readFileSync(filePicPath);
+  const filePicArray = filePicFile.buffer.slice(0);
+  const picAsNat = encodeArrayBuffer(filePicArray);
+  await canister.putFilePic(fileId, [picAsNat]);
+  console.timeEnd(`Stored file thumbnail for ${file.name}`);
+}
+
+
+
+
+
+
+
 
 function chunkFile(filePath) {
   const file = fs.readFileSync(filePath);

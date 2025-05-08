@@ -40,6 +40,10 @@ module {
       info : Types.VideoInit;
     };
 
+    public type CreateFile = {
+      fileId : Types.FileId;
+    };
+
     public type LikeVideo = {
       source : Types.UserId;
       target : Types.VideoId;
@@ -107,6 +111,7 @@ module {
       #reset : Types.TimeMode;
       #createProfile : CreateProfile;
       #createVideo : CreateVideo;
+      #createFile : CreateFile;
       #likeVideo : LikeVideo;
       #superLikeVideo : SuperLikeVideo;
       #superLikeVideoFail : SuperLikeVideoFail;
@@ -150,6 +155,10 @@ module {
     /// all videos.
     videos : Map<Types.VideoId, Video>;
 
+    // all files
+    files : Map<Types.FileId, Types.FileInfo>;
+    filePics : Map<Types.FileId, Types.FilePic>;
+
     /// all video pictures (aka thumbnails).
     videoPics : Map<Types.VideoId, Types.VideoPic>;
 
@@ -164,6 +173,7 @@ module {
 
     /// uploaded relation: relates profiles and videos.
     uploaded : Rel<Types.UserId, Types.VideoId>;
+    uploadedFiles : Rel<Types.UserId, Types.FileId>;
 
     /// all chunks.
     chunks : Map<Types.ChunkId, ChunkData>;
@@ -171,6 +181,7 @@ module {
     /// Users may place an abuse flag on videos and other users.
     abuseFlagUsers : Rel<Types.UserId, Types.UserId>;
     abuseFlagVideos : Rel<Types.UserId, Types.VideoId>;
+    abuseFlagFiles : Rel<Types.UserId, Types.FileId>;
   };
 
   // (shared) state.
@@ -191,6 +202,9 @@ module {
 
     /// all videos.
     videos : MapShared<Types.VideoId, Video>;
+
+    /// all files
+    files : MapShared<Types.FileId, Types.FileInfo>;
 
     rewards: MapShared<Types.UserId, Nat>;
 
@@ -226,14 +240,27 @@ module {
     chunkCount: Nat;
   };
 
+  public type File = {
+    userId : Types.UserId;
+    createdAt : Types.Timestamp;
+    uploadedAt : Types.Timestamp;
+    name : Text;
+    mimeType : Types.MimeType;
+    description : Text;
+    tags : [Text];
+    chunkCount : Nat;
+  };
+  
+
   public func empty (init : { admin : Principal }) : State {
     let equal = (Text.equal, Text.equal);
     let hash = (Text.hash, Text.hash);
     func messageEqual(a: Types.Message, b: Types.Message) : Bool = a == b;
     func messageHash(m: Types.Message) : Hash.Hash = Int.hash(m.id); // id is unique, so hash is unique
     let uploaded_ = RelObj.RelObj<Types.UserId, Types.VideoId>(hash, equal);
+    let uploadedFiles_ = RelObj.RelObj<Types.UserId, Types.FileId>(hash, equal);
     let st : State = {
-      access = Access.Access({ admin = init.admin ; uploaded = uploaded_ });
+      access = Access.Access({ admin = init.admin ; uploaded = uploaded_ ; files=uploadedFiles_});
       profiles = TrieMap.TrieMap<Types.UserId, Profile>(Text.equal, Text.hash);
       rewards = TrieMap.TrieMap<Types.UserId, Nat>(Text.equal, Text.hash);
       messages = RelObj.RelObj((Text.hash, messageHash), (Text.equal, messageEqual));
@@ -241,14 +268,18 @@ module {
       profilePics = TrieMap.TrieMap<Types.UserId, Types.ProfilePic>(Text.equal, Text.hash);
       videos = TrieMap.TrieMap<Types.VideoId, Video>(Text.equal, Text.hash);
       videoPics = TrieMap.TrieMap<Types.VideoId, Types.VideoPic>(Text.equal, Text.hash);
+      files = TrieMap.TrieMap<Types.FileId, Types.FileInfo>(Text.equal, Text.hash);
+      filePics = TrieMap.TrieMap<Types.FileId, Types.FilePic>(Text.equal, Text.hash);
       follows = RelObj.RelObj(hash, equal);
       likes = RelObj.RelObj(hash, equal);
       superLikes = RelObj.RelObj(hash, equal);
       uploaded = uploaded_;
+      uploadedFiles = uploadedFiles_;
       eventLog = SeqObj.ArrayObj<Event.Event>(Event.equal, null);
       var eventCount = 0;
       abuseFlagVideos = RelObj.RelObj(hash, equal);
       abuseFlagUsers = RelObj.RelObj(hash, equal);
+      abuseFlagFiles = RelObj.RelObj(hash, equal);
     };
     st
   };

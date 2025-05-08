@@ -1,258 +1,358 @@
-import type { Principal } from "@dfinity/agent";
-export type Command =
-  | {
-      assertVideoVirality: { isViral: boolean; videoId: VideoId };
+import type { Principal } from '@dfinity/principal';
+import type { ActorMethod } from '@dfinity/agent';
+import type { IDL } from '@dfinity/candid';
+
+export interface AbuseFlag {
+  'flag' : boolean,
+  'target' : { 'video' : VideoId__1 } |
+    { 'user' : UserId },
+  'reporter' : UserId,
+}
+export type ActionTarget = { 'all' : null } |
+  { 'video' : VideoId__1 } |
+  { 'file' : FileId__1 } |
+  { 'user' : UserId } |
+  { 'pubView' : null };
+export type AllowanceBalance = { 'zeroUntil' : Timestamp } |
+  { 'zeroForever' : null } |
+  { 'nonZero' : bigint };
+export interface Check {
+  'userAction' : UserAction,
+  'caller' : Principal,
+  'actionTarget' : ActionTarget,
+}
+export type Command = {
+    'assertVideoVirality' : { 'isViral' : boolean, 'videoId' : VideoId__2 }
+  } |
+  {
+    'putProfileFollow' : {
+      'toFollow' : UserId__2,
+      'userId' : UserId__2,
+      'follows' : boolean,
     }
-  | {
-      putProfileFollow: {
-        toFollow: UserId;
-        userId: UserId;
-        follows: boolean;
-      };
+  } |
+  {
+    'createTestData' : {
+      'users' : Array<UserId__2>,
+      'videos' : Array<[UserId__2, VideoId__2]>,
     }
-  | {
-      createTestData: {
-        users: Array<UserId>;
-        videos: Array<[UserId, VideoId]>;
-      };
+  } |
+  {
+    'putSuperLike' : {
+      'userId' : UserId__2,
+      'superLikes' : boolean,
+      'videoId' : VideoId__2,
     }
-  | {
-      putSuperLike: {
-        userId: UserId;
-        superLikes: boolean;
-        videoId: VideoId;
-      };
+  } |
+  {
+    'assertVideoFeed' : {
+      'userId' : UserId__2,
+      'limit' : [] | [bigint],
+      'videosPred' : VideosPred,
     }
-  | {
-      assertVideoFeed: {
-        userId: UserId;
-        limit: [] | [BigInt];
-        videosPred: VideosPred;
-      };
+  } |
+  {
+    'putRewardTransfer' : {
+      'sender' : UserId__2,
+      'amount' : bigint,
+      'receiver' : UserId__2,
     }
-  | { reset: TimeMode };
+  } |
+  { 'reset' : TimeMode };
+export interface CreateFile { 'fileId' : FileId__1 }
 export interface CreateProfile {
-  userName: string;
+  'pic' : [] | [ProfilePic__1],
+  'userName' : string,
 }
-export interface CreateVideo {
-  info: VideoInit_2;
+export interface CreateVideo { 'info' : VideoInit__1 }
+export type Event = {
+    'uploadReward' : { 'rewards' : bigint, 'videoId' : VideoId__1 }
+  } |
+  { 'superlikerReward' : { 'rewards' : bigint, 'videoId' : VideoId__1 } } |
+  { 'transferReward' : { 'rewards' : bigint } };
+export type EventKind = { 'likeVideo' : LikeVideo } |
+  { 'abuseFlag' : AbuseFlag } |
+  { 'superLikeVideoFail' : SuperLikeVideoFail } |
+  { 'superLikeVideo' : SuperLikeVideo } |
+  { 'rewardPointTransfer' : RewardPointTransfer } |
+  { 'createFile' : CreateFile } |
+  { 'createVideo' : CreateVideo } |
+  { 'createProfile' : CreateProfile } |
+  { 'emitSignal' : Signal } |
+  { 'reset' : TimeMode };
+export interface Event__1 { 'id' : bigint, 'kind' : EventKind, 'time' : bigint }
+export interface Event__2 { 'check' : Check, 'isOk' : boolean, 'time' : bigint }
+export type FileId = string;
+export type FileId__1 = string;
+export interface FileInfo {
+  'userId' : UserId,
+  'name' : string,
+  'createdAt' : Timestamp,
+  'tags' : Array<string>,
+  'mimeType' : MimeType,
+  'description' : string,
+  'fileId' : FileId__1,
+  'chunkCount' : bigint,
+  'viewerHasFlagged' : [] | [boolean],
+  'uploadedAt' : Timestamp,
 }
-export type Event =
-  | {
-      uploadReward: { rewards: BigInt; videoId: VideoId_2 };
-    }
-  | { superlikerReward: { rewards: BigInt; videoId: VideoId_2 } };
-export type EventKind =
-  | { likeVideo: LikeVideo }
-  | { superLikeVideoFail: SuperLikeVideoFail }
-  | { superLikeVideo: SuperLikeVideo }
-  | { createVideo: CreateVideo }
-  | { createProfile: CreateProfile }
-  | { emitSignal: Signal }
-  | { reset: TimeMode };
-export interface Event_2 {
-  kind: EventKind;
-  time: BigInt;
+export interface FileInfo__1 {
+  'userId' : UserId,
+  'name' : string,
+  'createdAt' : Timestamp,
+  'tags' : Array<string>,
+  'mimeType' : MimeType,
+  'description' : string,
+  'fileId' : FileId__1,
+  'chunkCount' : bigint,
+  'viewerHasFlagged' : [] | [boolean],
+  'uploadedAt' : Timestamp,
 }
+export interface FileInit {
+  'userId' : UserId,
+  'name' : string,
+  'createdAt' : Timestamp,
+  'tags' : Array<string>,
+  'mimeType' : MimeType,
+  'description' : string,
+  'chunkCount' : bigint,
+}
+export type FilePic = Uint8Array | number[];
+export type FilePic__1 = Uint8Array | number[];
+export type FileResult = [FileInfo, [] | [FilePic__1]];
+export type FileResults = Array<FileResult>;
 export interface LikeVideo {
-  source: UserId_2;
-  likes: boolean;
-  target: VideoId_2;
+  'source' : UserId,
+  'likes' : boolean,
+  'target' : VideoId__1,
 }
-export interface Message {
-  time: Timestamp;
-  event: Event;
+export interface Message { 'id' : bigint, 'time' : Timestamp, 'event' : Event }
+export type MimeType = string;
+export interface ProfileInfo {
+  'userName' : string,
+  'uploadedVideos' : Array<VideoId__1>,
+  'likedVideos' : Array<VideoId__1>,
+  'rewards' : bigint,
+  'hasPic' : boolean,
+  'followers' : Array<UserId>,
+  'following' : Array<UserId>,
+  'abuseFlagCount' : bigint,
 }
-export type ProfileInfo = ProfileInfo_2;
-export type ProfileInfoPlus = ProfileInfoPlus_2;
-export interface ProfileInfoPlus_2 {
-  userName: string;
-  uploadedVideos: Array<VideoInfo_2>;
-  likedVideos: Array<VideoInfo_2>;
-  rewards: BigInt;
-  hasPic: boolean;
-  followers: Array<ProfileInfo_2>;
-  following: Array<ProfileInfo_2>;
+export interface ProfileInfoPlus {
+  'userName' : string,
+  'uploadedVideos' : Array<VideoInfo__1>,
+  'likedVideos' : Array<VideoInfo__1>,
+  'likedFiles' : Array<FileInfo>,
+  'uploadedFiles' : Array<FileInfo>,
+  'rewards' : bigint,
+  'allowances' : [] | [UserAllowances],
+  'hasPic' : boolean,
+  'followers' : Array<ProfileInfo__1>,
+  'following' : Array<ProfileInfo__1>,
+  'viewerHasFlagged' : [] | [boolean],
+  'abuseFlagCount' : bigint,
 }
-export interface ProfileInfo_2 {
-  userName: string;
-  uploadedVideos: Array<VideoId_2>;
-  likedVideos: Array<VideoId_2>;
-  rewards: BigInt;
-  hasPic: boolean;
-  followers: Array<UserId_2>;
-  following: Array<UserId_2>;
+export interface ProfileInfo__1 {
+  'userName' : string,
+  'uploadedVideos' : Array<VideoId__1>,
+  'likedVideos' : Array<VideoId__1>,
+  'rewards' : bigint,
+  'hasPic' : boolean,
+  'followers' : Array<UserId>,
+  'following' : Array<UserId>,
+  'abuseFlagCount' : bigint,
 }
-export type ProfilePic = ProfilePic_2;
-export type ProfilePic_2 = Array<number>;
-export type Result = { ok: null } | { err: string };
-export type Signal = { viralVideo: ViralVideo };
+export type ProfilePic = Uint8Array | number[];
+export type ProfilePic__1 = Uint8Array | number[];
+export type Result = { 'ok' : null } |
+  { 'err' : string };
+export interface RewardPointTransfer {
+  'sender' : UserId,
+  'amount' : bigint,
+  'receiver' : UserId,
+}
+export interface Server {
+  'checkUsernameAvailable' : ActorMethod<[string], boolean>,
+  'createFile' : ActorMethod<[FileInit], [] | [FileId]>,
+  'createProfile' : ActorMethod<
+    [string, [] | [ProfilePic]],
+    [] | [ProfileInfoPlus]
+  >,
+  'createTestData' : ActorMethod<
+    [Array<UserId__1>, Array<[UserId__1, VideoId]>],
+    [] | [null]
+  >,
+  'createVideo' : ActorMethod<[VideoInit], [] | [VideoId]>,
+  'doDemo' : ActorMethod<[Array<Command>], [] | [Trace]>,
+  'getAccessLog' : ActorMethod<[], [] | [Array<Event__2>]>,
+  'getEventLog' : ActorMethod<[], [] | [Array<Event__1>]>,
+  'getFeedFiles' : ActorMethod<[UserId__1, [] | [bigint]], [] | [FileResults]>,
+  'getFeedVideos' : ActorMethod<
+    [UserId__1, [] | [bigint]],
+    [] | [VideoResults]
+  >,
+  'getFileChunk' : ActorMethod<[FileId, bigint], [] | [Uint8Array | number[]]>,
+  'getFileInfo' : ActorMethod<[[] | [UserId__1], FileId], [] | [FileInfo__1]>,
+  'getFilePic' : ActorMethod<[FileId], [] | [FilePic]>,
+  'getFiles' : ActorMethod<[], [] | [Array<FileInfo__1>]>,
+  'getIsSuperLiker' : ActorMethod<[UserId__1, VideoId], [] | [boolean]>,
+  'getMessages' : ActorMethod<[UserId__1], [] | [Array<Message>]>,
+  'getProfileInfo' : ActorMethod<[UserId__1], [] | [ProfileInfo]>,
+  'getProfilePic' : ActorMethod<[UserId__1], [] | [ProfilePic]>,
+  'getProfilePlus' : ActorMethod<
+    [[] | [UserId__1], UserId__1],
+    [] | [ProfileInfoPlus]
+  >,
+  'getProfileVideos' : ActorMethod<
+    [UserId__1, [] | [bigint]],
+    [] | [VideoResults]
+  >,
+  'getProfiles' : ActorMethod<[], [] | [Array<ProfileInfo>]>,
+  'getSearchVideos' : ActorMethod<
+    [UserId__1, Array<string>, [] | [bigint]],
+    [] | [VideoResults]
+  >,
+  'getSuperLikeValidNow' : ActorMethod<[UserId__1, VideoId], [] | [boolean]>,
+  'getUserNameByPrincipal' : ActorMethod<[Principal], [] | [Array<string>]>,
+  'getVideoChunk' : ActorMethod<
+    [VideoId, bigint],
+    [] | [Uint8Array | number[]]
+  >,
+  'getVideoInfo' : ActorMethod<[[] | [UserId__1], VideoId], [] | [VideoInfo]>,
+  'getVideoPic' : ActorMethod<[VideoId], [] | [VideoPic]>,
+  'getVideos' : ActorMethod<[], [] | [Array<VideoInfo>]>,
+  'isDropDay' : ActorMethod<[], [] | [boolean]>,
+  'putAbuseFlagUser' : ActorMethod<
+    [UserId__1, UserId__1, boolean],
+    [] | [null]
+  >,
+  'putAbuseFlagVideo' : ActorMethod<[UserId__1, VideoId, boolean], [] | [null]>,
+  'putFileChunk' : ActorMethod<
+    [FileId, bigint, Uint8Array | number[]],
+    [] | [null]
+  >,
+  'putFileInfo' : ActorMethod<[FileId, FileInit], [] | [null]>,
+  'putProfileFollow' : ActorMethod<
+    [UserId__1, UserId__1, boolean],
+    [] | [null]
+  >,
+  'putProfilePic' : ActorMethod<[UserId__1, [] | [ProfilePic]], [] | [null]>,
+  'putProfileVideoLike' : ActorMethod<
+    [UserId__1, VideoId, boolean],
+    [] | [null]
+  >,
+  'putRewardTransfer' : ActorMethod<
+    [UserId__1, UserId__1, bigint],
+    [] | [null]
+  >,
+  'putRewards' : ActorMethod<[UserId__1, bigint], [] | [null]>,
+  'putSuperLike' : ActorMethod<[UserId__1, VideoId, boolean], [] | [null]>,
+  'putTestFollows' : ActorMethod<[Array<[UserId__1, UserId__1]>], [] | [null]>,
+  'putVideoChunk' : ActorMethod<
+    [VideoId, bigint, Uint8Array | number[]],
+    [] | [null]
+  >,
+  'putVideoInfo' : ActorMethod<[VideoId, VideoInit], [] | [null]>,
+  'putVideoPic' : ActorMethod<[VideoId, [] | [VideoPic]], [] | [null]>,
+  'reset' : ActorMethod<[{ 'ic' : null } | { 'script' : bigint }], [] | [null]>,
+  'scriptTimeTick' : ActorMethod<[], [] | [null]>,
+  'setTimeMode' : ActorMethod<
+    [{ 'ic' : null } | { 'script' : bigint }],
+    [] | [null]
+  >,
+}
+export type Signal = { 'viralVideo' : ViralVideo };
 export interface SuperLikeVideo {
-  source: UserId_2;
-  target: VideoId_2;
-  superLikes: boolean;
+  'source' : UserId,
+  'target' : VideoId__1,
+  'superLikes' : boolean,
 }
-export interface SuperLikeVideoFail {
-  source: UserId_2;
-  target: VideoId_2;
-}
-export type TimeMode = { ic: null } | { script: BigInt };
+export interface SuperLikeVideoFail { 'source' : UserId, 'target' : VideoId__1 }
+export type TimeMode = { 'ic' : null } |
+  { 'script' : bigint };
 export type Timestamp = bigint;
 export interface Trace {
-  status: { ok: null } | { err: null };
-  trace: Array<TraceCommand>;
+  'status' : { 'ok' : null } |
+    { 'err' : null },
+  'trace' : Array<TraceCommand>,
 }
-export interface TraceCommand {
-  result: Result;
-  command: Command;
+export interface TraceCommand { 'result' : Result, 'command' : Command }
+export type UserAction = { 'admin' : null } |
+  { 'view' : null } |
+  { 'create' : null } |
+  { 'update' : null };
+export interface UserAllowances {
+  'abuseFlags' : AllowanceBalance,
+  'superLikes' : AllowanceBalance,
 }
-export type UserId = UserId_2;
-export type UserId_2 = string;
-export type UserId_3 = UserId_2;
-export type VideoId = VideoId_2;
-export type VideoId_2 = string;
-export type VideoId_3 = VideoId_2;
-export type VideoInfo = VideoInfo_2;
-export interface VideoInfo_2 {
-  pic: [] | [VideoPic_2];
-  viralAt: [] | [Timestamp];
-  userId: UserId_2;
-  name: string;
-  createdAt: Timestamp;
-  tags: Array<string>;
-  likes: Array<UserId_2>;
-  viewCount: BigInt;
-  caption: string;
-  chunkCount: BigInt;
-  superLikes: Array<UserId_2>;
-  uploadedAt: Timestamp;
-  videoId: VideoId_2;
+export type UserId = string;
+export type UserId__1 = string;
+export type UserId__2 = string;
+export type VideoId = string;
+export type VideoId__1 = string;
+export type VideoId__2 = string;
+export interface VideoInfo {
+  'pic' : [] | [VideoPic__1],
+  'viralAt' : [] | [Timestamp],
+  'userId' : UserId,
+  'name' : string,
+  'createdAt' : Timestamp,
+  'tags' : Array<string>,
+  'likes' : Array<UserId>,
+  'viewCount' : bigint,
+  'caption' : string,
+  'chunkCount' : bigint,
+  'superLikes' : Array<UserId>,
+  'viewerHasFlagged' : [] | [boolean],
+  'abuseFlagCount' : bigint,
+  'uploadedAt' : Timestamp,
+  'videoId' : VideoId__1,
 }
-export type VideoInit = VideoInit_2;
-export interface VideoInit_2 {
-  userId: UserId_2;
-  name: string;
-  createdAt: Timestamp;
-  tags: Array<string>;
-  caption: string;
-  chunkCount: BigInt;
+export interface VideoInfo__1 {
+  'pic' : [] | [VideoPic__1],
+  'viralAt' : [] | [Timestamp],
+  'userId' : UserId,
+  'name' : string,
+  'createdAt' : Timestamp,
+  'tags' : Array<string>,
+  'likes' : Array<UserId>,
+  'viewCount' : bigint,
+  'caption' : string,
+  'chunkCount' : bigint,
+  'superLikes' : Array<UserId>,
+  'viewerHasFlagged' : [] | [boolean],
+  'abuseFlagCount' : bigint,
+  'uploadedAt' : Timestamp,
+  'videoId' : VideoId__1,
 }
-export type VideoPic = VideoPic_2;
-export type VideoPic_2 = Array<number>;
-export type VideoResult = [VideoInfo_2, [] | [VideoPic_2]];
-export type VideoResults = VideoResults_2;
-export type VideoResults_2 = Array<VideoResult>;
-export type VideosPred =
-  | { containsAll: Array<VideoId> }
-  | { equals: Array<VideoId> };
+export interface VideoInit {
+  'userId' : UserId,
+  'name' : string,
+  'createdAt' : Timestamp,
+  'tags' : Array<string>,
+  'caption' : string,
+  'chunkCount' : bigint,
+}
+export interface VideoInit__1 {
+  'userId' : UserId,
+  'name' : string,
+  'createdAt' : Timestamp,
+  'tags' : Array<string>,
+  'caption' : string,
+  'chunkCount' : bigint,
+}
+export type VideoPic = Uint8Array | number[];
+export type VideoPic__1 = Uint8Array | number[];
+export type VideoResult = [VideoInfo__1, [] | [VideoPic__1]];
+export type VideoResults = Array<VideoResult>;
+export type VideosPred = { 'containsAll' : Array<VideoId__2> } |
+  { 'equals' : Array<VideoId__2> };
 export interface ViralVideo {
-  video: VideoId_2;
-  superLikers: Array<ViralVideoSuperLiker>;
-  uploader: UserId_2;
+  'video' : VideoId__1,
+  'superLikers' : Array<ViralVideoSuperLiker>,
+  'uploader' : UserId,
 }
-export interface ViralVideoSuperLiker {
-  time: BigInt;
-  user: UserId_2;
-}
-export default interface _SERVICE {
-  checkUsernameAvailable: (arg_0: string) => Promise<boolean>;
-  createProfile: (
-    arg_0: string,
-    arg_1: [] | [ProfilePic]
-  ) => Promise<[] | [ProfileInfoPlus]>;
-  createTestData: (
-    arg_0: Array<UserId_3>,
-    arg_1: Array<[UserId_3, VideoId_3]>
-  ) => Promise<[] | [null]>;
-  createVideo: (arg_0: VideoInit) => Promise<[] | [VideoId_3]>;
-  doDemo: (arg_0: Array<Command>) => Promise<Trace>;
-  doDemoCan30: () => Promise<Trace>;
-  doDemoCan32: () => Promise<Trace>;
-  getEventLog: () => Promise<[] | [Event_2]>;
-  getFeedVideos: (
-    arg_0: UserId_3,
-    arg_1: [] | [BigInt]
-  ) => Promise<[] | [VideoResults]>;
-  getIsSuperLiker: (
-    arg_0: UserId_3,
-    arg_1: VideoId_3
-  ) => Promise<[] | [boolean]>;
-  getMessages: (arg_0: UserId_3) => Promise<[] | [Message]>;
-  getProfileInfo: (arg_0: UserId_3) => Promise<[] | [ProfileInfo]>;
-  getProfilePic: (arg_0: UserId_3) => Promise<[] | [ProfilePic]>;
-  getProfilePlus: (
-    arg_0: [] | [UserId_2],
-    arg_1: UserId_3
-  ) => Promise<[] | [ProfileInfoPlus]>;
-  getProfileVideos: (
-    arg_0: UserId_3,
-    arg_1: [] | [number]
-  ) => Promise<[] | [VideoResults]>;
-  getProfiles: () => Promise<[] | [ProfileInfo]>;
-  getSearchVideos: (
-    arg_0: UserId_3,
-    arg_1: Array<string>,
-    arg_2: [] | [number]
-  ) => Promise<[] | [VideoResults]>;
-  getSuperLikeValidNow: (
-    arg_0: UserId_3,
-    arg_1: VideoId_3
-  ) => Promise<[] | [boolean]>;
-  getUserNameByPrincipal: (arg_0: Principal) => Promise<[] | [string]>;
-  getVideoChunk: (
-    arg_0: VideoId_3,
-    arg_1: number
-  ) => Promise<[] | [Array<number>]>;
-  getVideoInfo: (
-    arg_0: [] | [UserId_2],
-    arg_1: VideoId_3
-  ) => Promise<[] | [VideoInfo]>;
-  getVideoPic: (arg_0: VideoId_3) => Promise<[] | [VideoPic]>;
-  getVideos: () => Promise<[] | [VideoInfo]>;
-  isDropDay: () => Promise<[] | [boolean]>;
-  putProfileFollow: (
-    arg_0: UserId_3,
-    arg_1: UserId_3,
-    arg_2: boolean
-  ) => Promise<[] | [null]>;
-  putProfilePic: (
-    arg_0: UserId_3,
-    arg_1: [] | [ProfilePic]
-  ) => Promise<[] | [null]>;
-  putProfileVideoLike: (
-    arg_0: UserId_3,
-    arg_1: VideoId_3,
-    arg_2: boolean
-  ) => Promise<[] | [null]>;
-  putSuperLike: (
-    arg_0: UserId_3,
-    arg_1: VideoId_3,
-    arg_2: boolean
-  ) => Promise<[] | [null]>;
-  putTestFollows: (arg_0: Array<[UserId_3, UserId_3]>) => Promise<[] | [null]>;
-  putVideoChunk: (
-    arg_0: VideoId_3,
-    arg_1: number,
-    arg_2: Array<number>
-  ) => Promise<[] | [null]>;
-  putVideoInfo: (arg_0: VideoId_3, arg_1: VideoInit) => Promise<[] | [null]>;
-  putVideoPic: (
-    arg_0: VideoId_3,
-    arg_1: [] | [VideoPic]
-  ) => Promise<[] | [null]>;
-  putRewardTransfer: (
-    arg_0: UserId_3,
-    arg_1: UserId_3,
-    amount: BigInt
-  ) => Promise<[] | [null]>;
-  putAbuseFlagVideo: (
-    arg_0: UserId_3,
-    arg_1: VideoId,
-    shouldFlag: boolean
-  ) => Promise<[] | [null]>;
-  queryDemoCan30: () => Promise<Trace>;
-  queryDemoCan32: () => Promise<Trace>;
-  reset: (arg_0: { ic: null } | { script: BigInt }) => Promise<undefined>;
-  scriptTimeTick: () => Promise<undefined>;
-  setTimeMode: (arg_0: { ic: null } | { script: BigInt }) => Promise<undefined>;
-}
+export interface ViralVideoSuperLiker { 'time' : bigint, 'user' : UserId }
+export interface _SERVICE extends Server {}
+export declare const idlFactory: IDL.InterfaceFactory;
+export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

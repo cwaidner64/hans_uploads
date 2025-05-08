@@ -6,6 +6,7 @@ export * from "./video";
 export * from "./auth";
 export * from "./updateHead";
 export * from "./canister";
+export * from "./file";
 
 export const KEY_LOCALSTORAGE_USER = `ic-server-user`;
 

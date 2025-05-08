@@ -15,10 +15,12 @@ export default defineConfig({
   resolve: {
     alias: {
       "dfx-generated/Server": path.resolve(__dirname, "src/declarations/Server"),
+      "buffer": "buffer",
     },
   },
   define: {
     'import.meta.env.VITE_CANISTER_ID_Server': JSON.stringify(canisterIds.Server[networkName]),
     'import.meta.env.VITE_CANISTER_ID_server_ui': JSON.stringify(canisterIds.server_ui[networkName]),
+    'global':window
   },
 });

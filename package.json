@@ -13,14 +13,19 @@
     "start": "npm run start:dfx && vite",
     "seed": "npx ts-node -O '{\"module\": \"CommonJS\"}' scripts/seed.ts",
     "deploy": "npm run start:dfx && dfx deploy",
-    "test": "echo 'configure vitest or jest manually'"
+    "test": "echo 'configure vitest or jest manually'",
+    "generate:typings": "dfx generate && cp src/declarations/Server/Server.did.d.ts src/utils/canister/typings.d.ts"
   },
   "dependencies": {
     "@dfinity/agent": "^2.4.1",
     "@dfinity/auth-client": "^2.4.1",
     "@dfinity/identity": "^2.4.1",
+    "buffer": "^6.0.3",
     "lodash.debounce": "^4.0.8",
+    "mime": "^4.0.7",
+    "mime-types": "^3.0.1",
     "node-fetch": "^3.3.2",
+    "path": "^0.12.7",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-lottie-player": "^2.1.0",

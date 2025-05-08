@@ -2,7 +2,8 @@
   "canisters": {
     "Server": {
       "main":  "src/dfx_server_backend/main.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "candid": "src/declarations/Server/Server.did"
     },
     "server_ui": {
       "dependencies": [
