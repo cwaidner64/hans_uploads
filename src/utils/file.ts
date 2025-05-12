@@ -105,18 +105,18 @@ export function useUploadFile({userId}: {userId: string}) {
     
     
       async function handleUpload(fileToUpload) {
-        console.info("Storing video...");
+        console.info("Storing file...");
         try {
           console.time("Stored in");
-          const video = await uploadFile(userId, fileToUpload, caption);
+          const myfile = await uploadFile(userId, fileToUpload, caption);
     
-          setCompletedFile(video);
+          setCompletedFile(myfile);
           setReady(false);
           setFile(undefined);
-          setMimeType(video.mimeType);
+          setMimeType(myfile.mimeType);
           console.timeEnd("Stored in");
         } catch (error) {
-          console.error("Failed to store video.", error);
+          console.error("Failed to store file.", error);
         }
       }
     
