@@ -41,7 +41,7 @@ module {
     };
 
     public type CreateFile = {
-      fileId : Types.FileId;
+      info : Types.FileInfo;
     };
 
     public type LikeVideo = {

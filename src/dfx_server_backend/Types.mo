@@ -12,7 +12,7 @@ public type VideoPic = [Nat8]; // encoded as a PNG file
 public type ChunkData = [Nat8]; // encoded as ???
 
 
-public type FileId = Text;
+public type FileId = Text; // chosen by createFile
 public type FileChunkId = Text;
 public type FileChunk = [Nat8];
 public type FilePic = [Nat8]; // Optional: a generic preview/thumbnail
