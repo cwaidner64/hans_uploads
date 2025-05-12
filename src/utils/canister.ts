@@ -44,9 +44,23 @@ export function getUserFromStorage(
 }
 
 export async function getUserNameByPrincipal(principal: Principal) {
+  let usernames = await (await Server.actor).getUserNameByPrincipal(principal);
+  // unwrap nested array
+  if (Array.isArray(usernames?.[0])) {
+    usernames = usernames[0];
+  }
+  // filter out empty string but keep if it has only empty strings
+  if (Array.isArray(usernames)) {
+    const filtered = usernames.filter(str => str !== "");
+    if (filtered.length > 0) usernames = filtered;
+  }
+
   const icUserName = unwrap<string>(
-    await (await Server.actor).getUserNameByPrincipal(principal)
+    usernames
   )!;
+  console.log('principal', principal)
+  console.log('usernames from principal', usernames)
+  console.log('icUserName', icUserName)
   return icUserName;
 }
 

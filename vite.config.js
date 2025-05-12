@@ -21,6 +21,9 @@ export default defineConfig({
   define: {
     'import.meta.env.VITE_CANISTER_ID_Server': JSON.stringify(canisterIds.Server[networkName]),
     'import.meta.env.VITE_CANISTER_ID_server_ui': JSON.stringify(canisterIds.server_ui[networkName]),
-    'global':window
+    'global': 'window',
+    'process.env': {
+      'CANISTER_ID_SERVER': process.env.CANISTER_ID_SERVER
+    }
   },
 });
