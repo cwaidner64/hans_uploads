@@ -103,7 +103,7 @@ export function Upload({
     // Implement logic to upload the file (e.g., using a file upload controller)
     alert(`Uploading file: ${file_upload.name}`);
     fileUploadController.setFile(file_upload);
-    fileUploadController.setCaption(""); // Assuming no caption for non-video files
+    fileUploadController.setCaption("" + file_upload.name); // Assuming no caption for non-video files
     fileUploadController.setReady(true);
   }
 

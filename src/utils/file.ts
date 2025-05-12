@@ -23,6 +23,8 @@ export function getFileInit(
     name: file.name.replace(/\.[^/.]+$/, ""),
     tags: caption.match(hashtagRegExp) || [],
     userId,
+    mimeType: file.type,
+    description: "" + file.name,
   };
 }
 export interface UploadFileInit {
