@@ -115,6 +115,7 @@ export async function getUserFromCanister(
     await (await Server.actor).getProfilePlus([userId], userId)
   );
   if (icUser) {
+    console.log(`icUser if exists`, icUser)
     return icUser;
   } else {
     return null;

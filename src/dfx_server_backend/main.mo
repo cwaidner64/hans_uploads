@@ -374,8 +374,8 @@ shared ({caller = initPrincipal}) actor class Server () /* : Types.Service */ {
       let profile = state.profiles.get(userId)!;
       {
         userName = profile.userName;
-        uploadedFiles=getNonAbuseFiles(caller, state.uploaded.get0(userId))!;
-        likedFiles = getNonAbuseFiles(caller, state.uploadedFiles.get0(userId))!;
+        uploadedFiles= getNonAbuseFiles(caller, state.uploadedFiles.get0(userId))!;
+        likedFiles = getNonAbuseFiles(caller, state.likes.get0(userId))!;
         following = getNonAbuseProfiles(state.follows.get0(userId))!;
         followers = getNonAbuseProfiles(state.follows.get1(userId))!;
         likedVideos = getNonAbuseVideos(caller, state.likes.get0(userId))!;
