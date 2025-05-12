@@ -23,7 +23,7 @@ export default defineConfig({
     'import.meta.env.VITE_CANISTER_ID_server_ui': JSON.stringify(canisterIds.server_ui[networkName]),
     'global': 'window',
     'process.env': {
-      'CANISTER_ID_SERVER': process.env.CANISTER_ID_SERVER
+      'CANISTER_ID_SERVER': JSON.stringify(canisterIds.Server[networkName]).replaceAll("\"", "")
     }
   },
 });

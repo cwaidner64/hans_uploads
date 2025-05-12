@@ -4,7 +4,6 @@ import {
   canisterId as Server_canister_id,
 } from "dfx-generated/Server";
 import _SERVICE from "./typings";
-const canisterId = import.meta.env.VITE_CANISTER_ID_Server;
 import dfxConfig from "../../../dfx.json";
 
 const DFX_NETWORK = process.env.DFX_NETWORK || "local";
@@ -21,7 +20,7 @@ function createActor(identity?: Identity) {
   const agent = new HttpAgent({ host, identity });
   const actor = Actor.createActor<_SERVICE>(Server_idl, {
     agent,
-    canisterId
+    canisterId: Server_canister_id
   });
   return { actor, agent };
 }
