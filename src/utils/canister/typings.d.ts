@@ -59,7 +59,7 @@ export type Command = {
     }
   } |
   { 'reset' : TimeMode };
-export interface CreateFile { 'fileId' : FileId__1 }
+export interface CreateFile { 'info' : FileInit__1 }
 export interface CreateProfile {
   'pic' : [] | [ProfilePic__1],
   'userName' : string,

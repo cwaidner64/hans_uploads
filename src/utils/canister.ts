@@ -345,8 +345,10 @@ export async function getFileInfo(userId: string, fileId: string) {
 }
 
 export async function createFile(fileInit: FileInit): Promise<string> {
+  const actor = (await Server.actor)
+
   const fileId = unwrap<string>(
-    await (await Server.actor).createFile(fileInit)
+    await actor.createFile(fileInit)
   );
   if (fileId) {
     return fileId;
