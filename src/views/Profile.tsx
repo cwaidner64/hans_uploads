@@ -37,6 +37,8 @@ export function Profile({
 }) {
   const { userId = currentUser?.userName } = useParams<ProfileByIdParams>();
   const [activeSubView, setActiveSubView] = useState(0);
+  const [urlWithSearch] = useState<string>(globalThis.location.search);
+
   const navigate = useNavigate();
   const goBack = () => navigate(-1);
 
@@ -102,6 +104,14 @@ export function Profile({
   // @ts-ignore
   const { userName = "", uploadedVideos = [], uploadedFiles = [], followers = [], following = [] } =
     userProfile ?? {};
+
+  // activate defaultSubView by referecing url parameter
+  useEffect(() => {
+    const defaultSubView = new URLSearchParams(urlWithSearch).get("defaultSubView");
+    if (defaultSubView && Number.isInteger(Number(defaultSubView))) {
+      setActiveSubView(Number(defaultSubView) ?? 0)
+    }
+  }, [urlWithSearch]);
 
   return (
     <>

@@ -123,7 +123,7 @@ export function Upload({
       setUploading(false);
       onUpload();
       setTimeout(() => {
-        navigate("/profile");
+        navigate("/profile?defaultSubView=1");
       }, 2000);
     }
   }, [fileUploadController.completedFile]);
