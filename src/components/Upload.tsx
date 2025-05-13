@@ -105,6 +105,7 @@ export function Upload({
     fileUploadController.setFile(file_upload);
     fileUploadController.setCaption("" + file_upload.name); // Assuming no caption for non-video files
     fileUploadController.setReady(true);
+    setUploading(true);
   }
 
   useEffect(() => {
@@ -116,6 +117,16 @@ export function Upload({
       }, 2000);
     }
   }, [videoUploadController.completedVideo]);
+
+  useEffect(() => {
+    if (fileUploadController.completedFile !== undefined) {
+      setUploading(false);
+      onUpload();
+      setTimeout(() => {
+        navigate("/profile");
+      }, 2000);
+    }
+  }, [fileUploadController.completedFile]);
 
   return (
     <main

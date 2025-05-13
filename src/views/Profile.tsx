@@ -100,7 +100,7 @@ export function Profile({
   }
 
   // @ts-ignore
-  const { userName = "", uploadedVideos = [], followers = [], following = [] } =
+  const { userName = "", uploadedVideos = [], uploadedFiles = [], followers = [], following = [] } =
     userProfile ?? {};
 
   return (
@@ -156,6 +156,7 @@ export function Profile({
           <section className="profile-nav">
             {[
               ["Videos", uploadedVideos.length],
+              ["Files", uploadedFiles.length],
               ["Followers", followers.length],
               ["Following", following.length],
             ].map(([label, count], index) => (
@@ -194,6 +195,26 @@ export function Profile({
           </section>
         )}
         {activeSubView === 1 && (
+          <section className="profile-videos">
+            {uploadedFiles.length > 0 ? (
+              uploadedFiles.map((uploadedFile) => (
+                <div style={{color: `black`, padding: '5px', width: '33%', fontSize: '14px', wordBreak: 'break-all'}}>
+                  {uploadedFile.name}
+                </div>
+              ))
+            ) : (
+              <div className="no-results">
+                No files yet
+                {isCurrentUserProfile && (
+                  <Link to="/upload">
+                    <button className="primary">Upload one now!</button>
+                  </Link>
+                )}
+              </div>
+            )}
+          </section>
+        )}
+        {activeSubView === 2 && (
           <section className="followers">
             {followers.length > 0 ? (
               followers.map((follower) => (
@@ -210,7 +231,7 @@ export function Profile({
             )}
           </section>
         )}
-        {activeSubView === 2 && (
+        {activeSubView === 3 && (
           <section className="following">
             {following.length > 0 ? (
               following.map((following) => (
