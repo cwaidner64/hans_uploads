@@ -52,6 +52,7 @@ Its long and has like 20 symbols
 cd ../dfx_server
 # Or where ever you have the actual project
 rm -rf .dfx # clear the binaries if it imports wrong thing
+npm ci 
 dfx deploy
 # 
 ```
