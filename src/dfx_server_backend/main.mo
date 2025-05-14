@@ -24,6 +24,7 @@ import Time "mo:base/Time";
 import TrieMap "mo:base/TrieMap";
 import Float "mo:base/Float";
 import Types "./Types";
+import Prim "mo:prim";
 
 shared ({caller = initPrincipal}) actor class Server () /* : Types.Service */ {
 
@@ -58,6 +59,43 @@ shared ({caller = initPrincipal}) actor class Server () /* : Types.Service */ {
 
   /*public*/ func setState(st : State.StateShared) : async () {
     state := State.fromShared(st);
+  };
+
+  public query func get_rts_stats() : async Text {
+    let version = Prim.rts_version();
+    let memorySize = Prim.rts_memory_size();
+    let heapSize = Prim.rts_heap_size();
+    let totalAlloc = Prim.rts_total_allocation();
+    let reclaimed = Prim.rts_reclaimed();
+    let maxLive = Prim.rts_max_live_size();
+
+    // Get number of entries in state.chunks
+    let chunksSize = state.chunks.size();
+
+    return
+      "RTS Version: " # version # "\n" #
+      "Memory Size (pages of 64KB): " # Nat.toText(memorySize) # "\n" #
+      "Heap Size (pages of 64KB): " # Nat.toText(heapSize) # "\n" #
+      "Total Allocation (pages of 64KB): " # Nat.toText(totalAlloc) # "\n" #
+      "Reclaimed (pages of 64KB): " # Nat.toText(reclaimed) # "\n" #
+      "Max Live Size (pages of 64KB): " # Nat.toText(maxLive) # "\n" #
+      "Number of entries in state.chunks: " # Nat.toText(chunksSize);
+  };
+
+  public query func get_chunks_stats() : async Text {
+    var result = "";
+    // Iterate over all chunk entries: (chunkId, chunkData)
+    for ((chunkId, chunkData) in state.chunks.entries()) {
+      // chunkData is [Nat8], so length is size in bytes
+      let size = Array.size(chunkData);
+      // Append info line, add newline after each entry
+      result := result # chunkId # ": " # Nat.toText(size) # " bytes\n";
+    };
+    // If no chunks, indicate empty
+    if (result == "") {
+      result := "No chunks stored.";
+    };
+    return result;
   };
 
   public query func checkUsernameAvailable(userName_ : Text): async Bool {
